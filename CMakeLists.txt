@@ -32,8 +32,9 @@ if (MSVC)
             /clang:-Wold-style-cast
             /clang:-Wimplicit-fallthrough
         )
+    else()
+        target_compile_options(kiero PRIVATE /WX /W4)
     endif()
-    target_compile_options(kiero PRIVATE /WX /W4)
 else()
     message(WARNING "Non Microsoft compatible compiler detected")
 endif()

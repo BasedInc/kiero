@@ -130,7 +130,7 @@ void kiero::shutdown()
     }
 }
 
-kiero::Status kiero::bind(uint16_t _index, void** _original, void* _function)
+kiero::Status kiero::bind([[maybe_unused]] uint16_t _index, void** _original, void* _function)
 {
     // TODO: Need own detour function
 
@@ -152,7 +152,7 @@ kiero::Status kiero::bind(uint16_t _index, void** _original, void* _function)
     return Status::NotInitializedError;
 }
 
-void kiero::unbind(uint16_t _index)
+void kiero::unbind([[maybe_unused]] uint16_t _index)
 {
     if (g_renderType != RenderType::None)
     {
