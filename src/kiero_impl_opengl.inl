@@ -1,13 +1,11 @@
 #pragma once
 
-#include <gl/GL.h>
 #include <array>
 
-namespace kiero
-{
+namespace kiero {
+
     template<>
-    Status initRenderType<RenderType::OpenGL>()
-    {
+    inline Status initRenderType<RenderType::OpenGL>() {
         static constexpr std::array methodsNames{
             "glAccum", "glAlphaFunc", "glAreTexturesResident", "glArrayElement", "glBegin", "glBindTexture", "glBitmap", "glBlendFunc", "glCallList", "glCallLists", "glClear", "glClearAccum",
             "glClearColor", "glClearDepth", "glClearIndex", "glClearStencil", "glClipPlane", "glColor3b", "glColor3bv", "glColor3d", "glColor3dv", "glColor3f", "glColor3fv", "glColor3i", "glColor3iv",
@@ -40,17 +38,14 @@ namespace kiero
             "glVertex3s", "glVertex3sv", "glVertex4d", "glVertex4dv", "glVertex4f", "glVertex4fv", "glVertex4i", "glVertex4iv", "glVertex4s", "glVertex4sv", "glVertexPointer", "glViewport"
         };
 
-        HMODULE libOpenGL32;
-        if ((libOpenGL32 = ::GetModuleHandle(_T("opengl32.dll"))) == nullptr)
-        {
+        const HMODULE libOpenGL32 = ::GetModuleHandle(_T("opengl32.dll"));
+        if (libOpenGL32 == nullptr) {
             return Status::ModuleNotFoundError;
         }
 
-        g_methodsTable = static_cast<uintptr_t*>(::calloc(methodsNames.size(), sizeof(uintptr_t)));
-
-        for (size_t i = 0; i < methodsNames.size(); i++)
-        {
-            g_methodsTable[i] = reinterpret_cast<uintptr_t>(::GetProcAddress(libOpenGL32, methodsNames[i]));
+        g_methodsTable.resize(methodsNames.size());
+        for (size_t i = 0; i < methodsNames.size(); i++) {
+            g_methodsTable[i] = reinterpret_cast<uintptr_t>(GetProcAddress(libOpenGL32, methodsNames[i]));
         }
 
         return Status::Success;

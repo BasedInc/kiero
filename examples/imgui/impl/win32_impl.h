@@ -1,14 +1,6 @@
-﻿#ifndef __WIN32_IMPL_H__
-#define __WIN32_IMPL_H__
+﻿#pragma once
 
-#include "shared.h"
+namespace impl::win32 {
 
-namespace impl
-{
-	namespace win32
-	{
-		void init(void* hwnd);
-	}
+	void init(void* hwnd);
 }
-
-#endif // __WIN32_IMPL_H__

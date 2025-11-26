@@ -1,13 +1,11 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
 #include <array>
 
-namespace kiero
-{
+namespace kiero {
+
     template<>
-    Status initRenderType<RenderType::Vulkan>()
-    {
+    inline Status initRenderType<RenderType::Vulkan>() {
         static constexpr std::array methodsNames{
             "vkCreateInstance", "vkDestroyInstance", "vkEnumeratePhysicalDevices", "vkGetPhysicalDeviceFeatures", "vkGetPhysicalDeviceFormatProperties", "vkGetPhysicalDeviceImageFormatProperties",
             "vkGetPhysicalDeviceProperties", "vkGetPhysicalDeviceQueueFamilyProperties", "vkGetPhysicalDeviceMemoryProperties", "vkGetInstanceProcAddr", "vkGetDeviceProcAddr", "vkCreateDevice",
@@ -29,17 +27,14 @@ namespace kiero
             "vkCmdEndRenderPass", "vkCmdExecuteCommands"
         };
 
-        HMODULE libVulkan;
-        if ((libVulkan = GetModuleHandle(_T("vulkan-1.dll"))) == nullptr)
-        {
+        const HMODULE libVulkan = GetModuleHandle(_T("vulkan-1.dll"));
+        if (libVulkan == nullptr) {
             return Status::ModuleNotFoundError;
         }
 
-        g_methodsTable = static_cast<uintptr_t*>(::calloc(methodsNames.size(), sizeof(uintptr_t)));
-
-        for (size_t i = 0; i < methodsNames.size(); i++)
-        {
-            g_methodsTable[i] = reinterpret_cast<uintptr_t>(::GetProcAddress(libVulkan, methodsNames[i]));
+        g_methodsTable.resize(methodsNames.size());
+        for (size_t i = 0; i < methodsNames.size(); i++) {
+            g_methodsTable[i] = reinterpret_cast<uintptr_t>(GetProcAddress(libVulkan, methodsNames[i]));
         }
 
         return Status::Success;

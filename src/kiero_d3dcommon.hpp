@@ -5,11 +5,9 @@
 
 namespace kiero::d3d {
 
-	class TemporaryWindow
-	{
+	class TemporaryWindow {
 	public:
-		TemporaryWindow()
-		{
+		TemporaryWindow() {
 			this->windowClass.cbSize = sizeof(WNDCLASSEX);
 			this->windowClass.style = CS_HREDRAW | CS_VREDRAW;
 			this->windowClass.lpfnWndProc = DefWindowProc;
@@ -36,36 +34,31 @@ namespace kiero::d3d {
 			);
 		}
 
-		~TemporaryWindow()
-		{
+		~TemporaryWindow() {
 			::DestroyWindow(this->handle);
             ::UnregisterClass(this->windowClass.lpszClassName, this->windowClass.hInstance);
 		}
 
-		explicit operator HWND() const
-		{
+		explicit operator HWND() const {
 			return this->handle;
 		}
+
 	private:
 		WNDCLASSEX windowClass{};
 		HWND handle{};
 	};
 
-	static TemporaryWindow createTempWindow()
-	{
+	static TemporaryWindow createTempWindow() {
 		return TemporaryWindow{};
 	}
 
-	static DXGI_SWAP_CHAIN_DESC createSwapChainDesc(HWND window)
-	{
-		constexpr DXGI_RATIONAL refreshRate
-		{
+	static DXGI_SWAP_CHAIN_DESC createSwapChainDesc(const HWND window) {
+		constexpr DXGI_RATIONAL refreshRate {
 			.Numerator = 60,
 			.Denominator = 1,
 		};
 
-        constexpr DXGI_MODE_DESC bufferDesc
-		{
+        constexpr DXGI_MODE_DESC bufferDesc {
         	.Width = 100,
         	.Height = 100,
         	.RefreshRate = refreshRate,
@@ -74,14 +67,12 @@ namespace kiero::d3d {
         	.Scaling = DXGI_MODE_SCALING_UNSPECIFIED,
         };
 
-        constexpr DXGI_SAMPLE_DESC sampleDesc
-		{
+        constexpr DXGI_SAMPLE_DESC sampleDesc {
         	.Count = 1,
         	.Quality = 0,
         };
 
-        return DXGI_SWAP_CHAIN_DESC
-		{
+        return DXGI_SWAP_CHAIN_DESC {
         	.BufferDesc = bufferDesc,
         	.SampleDesc = sampleDesc,
         	.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,

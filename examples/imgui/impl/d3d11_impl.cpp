@@ -1,40 +1,42 @@
-﻿#include "../../../kiero.h"
+﻿#include "d3d11_impl.h"
 
-#if KIERO_INCLUDE_D3D11
+#ifdef KIERO_INCLUDE_D3D11
 
-#include "d3d11_impl.h"
+#include <cassert>
 #include <d3d11.h>
-#include <assert.h>
+
+#include <winrt/base.h>
 
 #include "win32_impl.h"
+#include "shared.h"
 
-#include "../imgui/imgui.h"
-#include "../imgui/examples/imgui_impl_win32.h"
-#include "../imgui/examples/imgui_impl_dx11.h"
+#include <kiero.hpp>
 
-typedef long(__stdcall* Present)(IDXGISwapChain*, UINT, UINT);
-static Present oPresent = NULL;
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx11.h>
 
-long __stdcall hkPresent11(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
-{
+using Present = long(__stdcall*)(IDXGISwapChain*, UINT, UINT);
+static Present oPresent = nullptr;
+
+static long __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT Flags) {
 	static bool init = false;
 
-	if (!init)
-	{
+	if (!init) {
 		DXGI_SWAP_CHAIN_DESC desc;
 		pSwapChain->GetDesc(&desc);
 
-		ID3D11Device* device;
-		pSwapChain->GetDevice(__uuidof(ID3D11Device), (void**)&device);
+		winrt::com_ptr<ID3D11Device> device;
+		pSwapChain->GetDevice(IID_PPV_ARGS(device.put()));
 
-		ID3D11DeviceContext* context;
-		device->GetImmediateContext(&context);
+		winrt::com_ptr<ID3D11DeviceContext> context;
+		device->GetImmediateContext(context.put());
 
 		impl::win32::init(desc.OutputWindow);
 
 		ImGui::CreateContext();
 		ImGui_ImplWin32_Init(desc.OutputWindow);
-		ImGui_ImplDX11_Init(device, context);
+		ImGui_ImplDX11_Init(device.get(), context.get());
 
 		init = true;
 	}
@@ -52,9 +54,9 @@ long __stdcall hkPresent11(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT F
 	return oPresent(pSwapChain, SyncInterval, Flags);
 }
 
-void impl::d3d11::init()
-{
-	assert(kiero::bind(8, (void**)&oPresent, hkPresent11) == kiero::Status::Success);
+void impl::d3d11::init() {
+	const auto status = kiero::bind<&IDXGISwapChain::Present>(&oPresent, &hkPresent);
+	assert(status == kiero::Status::Success);
 }
 
 #endif // KIERO_INCLUDE_D3D11

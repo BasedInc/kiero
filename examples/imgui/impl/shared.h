@@ -1,6 +1,8 @@
 ﻿#pragma once
 
-namespace impl
-{
-	void showExampleWindow(const char* comment);
+#include <string_view>
+
+namespace impl {
+
+	void showExampleWindow(std::string_view comment);
 }
