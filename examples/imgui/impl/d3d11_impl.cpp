@@ -32,11 +32,11 @@ static long __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncInter
 		winrt::com_ptr<ID3D11DeviceContext> context;
 		device->GetImmediateContext(context.put());
 
-		impl::win32::init(desc.OutputWindow);
-
 		ImGui::CreateContext();
 		ImGui_ImplWin32_Init(desc.OutputWindow);
 		ImGui_ImplDX11_Init(device.get(), context.get());
+
+		impl::win32::init(desc.OutputWindow);
 
 		init = true;
 	}
