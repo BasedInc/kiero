@@ -1,25 +1,6 @@
 #include <kiero.hpp>
 
-#ifdef KIERO_INCLUDE_D3D9
-# include "impl/d3d9_impl.h"
-#endif
-
-#ifdef KIERO_INCLUDE_D3D10
-# include "impl/d3d10_impl.h"
-#endif
-
-#ifdef KIERO_INCLUDE_D3D11
-# include "impl/d3d11_impl.h"
-#endif
-
-#ifdef KIERO_INCLUDE_D3D12
-#endif
-
-#ifdef KIERO_INCLUDE_OPENGL
-#endif
-
-#ifdef KIERO_INCLUDE_VULKAN
-#endif
+#include "impl/renderer_impl.h"
 
 #ifndef KIERO_USE_MINHOOK
 # error "The example requires that minhook be enabled!"
@@ -27,40 +8,35 @@
 
 #include <Windows.h>
 
-DWORD kieroExampleThread(LPVOID) {
-    if (kiero::init(kiero::RenderType::Auto) == kiero::Status::Success) {
-        switch (kiero::getRenderType()) {
-            using enum kiero::RenderType;
-            case D3D9:
-#ifdef KIERO_INCLUDE_D3D9
-                impl::d3d9::init();
-#endif
-                break;
-            case D3D10:
-#ifdef KIERO_INCLUDE_D3D10
-                impl::d3d10::init();
-#endif
-                break;
-            case D3D11:
-#ifdef KIERO_INCLUDE_D3D11
-                impl::d3d11::init();
-#endif
-                break;
-            case D3D12:
-                // TODO: D3D12 implementation?
-            case OpenGL:
-                // TODO: OpenGL implementation?
-            case Vulkan:
-                // TODO: Vulkan implementation?
-            case None:
-            case Auto:
-                break;
-        }
-
-        return 1;
+static DWORD WINAPI kieroExampleThread(LPVOID) {
+    if (kiero::init(kiero::RenderType::Auto) != kiero::Status::Success) {
+        return FALSE;
     }
 
-	return 0;
+    switch (kiero::getRenderType()) {
+        using enum kiero::RenderType;
+        case D3D9:
+            impl::d3d9::init();
+            break;
+        case D3D10:
+            impl::d3d10::init();
+            break;
+        case D3D11:
+            impl::d3d11::init();
+            break;
+        case D3D12:
+            impl::d3d12::init();
+            break;
+        case OpenGL:
+            impl::opengl::init();
+            break;
+        case Vulkan:
+            // TODO: Vulkan implementation?
+        case None:
+        case Auto:
+            break;
+    }
+    return TRUE;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpReserved) {

@@ -1,4 +1,4 @@
-﻿#include "d3d10_impl.h"
+﻿#include "renderer_impl.h"
 
 #ifdef KIERO_INCLUDE_D3D10
 
@@ -16,18 +16,18 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx10.h>
 
-using Present = long(__stdcall*)(IDXGISwapChain*, UINT, UINT);
+using Present = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT);
 static Present oPresent = nullptr;
 
-static long __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT Flags) {
+static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT Flags) {
 	static bool init = false;
 
 	if (!init) {
 		DXGI_SWAP_CHAIN_DESC desc;
-		pSwapChain->GetDesc(&desc);
+		winrt::check_hresult(pSwapChain->GetDesc(&desc));
 
 		winrt::com_ptr<ID3D10Device> device;
-		pSwapChain->GetDevice(IID_PPV_ARGS(device.put()));
+		winrt::check_hresult(pSwapChain->GetDevice(IID_PPV_ARGS(device.put())));
 
 		ImGui::CreateContext();
 		ImGui_ImplWin32_Init(desc.OutputWindow);
@@ -55,5 +55,9 @@ void impl::d3d10::init() {
 	const auto status = kiero::bind<&IDXGISwapChain::Present>(&oPresent, &hkPresent);
 	assert(status == kiero::Status::Success);
 }
+
+#else
+
+void impl::d3d10::init() {}
 
 #endif // KIERO_INCLUDE_D3D10
