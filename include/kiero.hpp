@@ -42,7 +42,7 @@ namespace kiero {
     Status unbind(uint16_t index);
 
     template<auto T, typename Detour = typename detail::memfn_ptr_traits<decltype(T)>::detour_type>
-    Status bind(Detour* original, Detour* detour);
+    Status bind(std::type_identity_t<Detour**> original, std::type_identity_t<Detour*> detour);
 
     template<auto T>
     Status unbind();
@@ -66,7 +66,7 @@ namespace kiero::detail {
 namespace kiero {
 
     template<auto T, typename Detour>
-    Status bind(Detour* original, Detour detour) {
+    Status bind(std::type_identity_t<Detour**> original, std::type_identity_t<Detour*> detour) {
         const auto method = getMethod<T>();
         if (!method) {
             return Status::NoSuchInterfaceError;
