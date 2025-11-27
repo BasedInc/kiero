@@ -35,10 +35,10 @@ namespace {
         winrt::com_ptr<ID3D12Resource> resource{};
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};
     };
-    std::vector<FrameContext> g_frameContext;
+    std::vector<FrameContext> g_frameContext{};
 
-    void InitD3D(IDXGISwapChain3* pSwapChain) {
-        g_pSwapChain.copy_from(pSwapChain);
+    void InitD3D(IDXGISwapChain* pSwapChain) {
+        winrt::check_hresult(pSwapChain->QueryInterface(IID_PPV_ARGS(g_pSwapChain.put())));
         winrt::check_hresult(g_pSwapChain->GetDevice(IID_PPV_ARGS(g_pd3dDevice.put())));
 
         UINT framesInFlight;
@@ -102,12 +102,18 @@ namespace {
             context.resource = std::move(backBuffer);
         }
     }
+
+    void CleanupRenderTarget() {
+        for (auto& context : g_frameContext) {
+            context.resource = nullptr;
+        }
+    }
 }
 
-using Present = HRESULT(__stdcall*)(IDXGISwapChain3*, UINT, UINT);
-static Present oPresent = nullptr;
+using Present = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT);
+static Present oPresent{};
 
-static HRESULT __stdcall hkPresent(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT Flags) {
+static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT Flags) {
     static bool init = false;
 
     if (!init) {
@@ -179,8 +185,44 @@ static HRESULT __stdcall hkPresent(IDXGISwapChain3* pSwapChain, const UINT SyncI
     return oPresent(pSwapChain, SyncInterval, Flags);
 }
 
+using ResizeBuffers = HRESULT(*)(IDXGISwapChain*, UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags);
+ResizeBuffers oResizeBuffers{};
+
+HRESULT hkResizeBuffers(
+    IDXGISwapChain*   pSwapChain,
+    const UINT        BufferCount,
+    const UINT        Width,
+    const UINT        Height,
+    const DXGI_FORMAT NewFormat,
+    const UINT        SwapChainFlags
+) {
+    CleanupRenderTarget();
+    const auto result = oResizeBuffers(pSwapChain, BufferCount, Width, Height, NewFormat, SwapChainFlags);
+    CreateRenderTarget();
+    return result;
+}
+
+using ResizeBuffers1 = HRESULT(*)(IDXGISwapChain3*, UINT, UINT, UINT, DXGI_FORMAT, UINT, const UINT*, IUnknown* const*);
+ResizeBuffers1 oResizeBuffers1{};
+
+HRESULT hkResizeBuffers1(
+    IDXGISwapChain3*  pSwapChain,
+    const UINT        BufferCount,
+    const UINT        Width,
+    const UINT        Height,
+    const DXGI_FORMAT NewFormat,
+    const UINT        SwapChainFlags,
+    const UINT*       pCreationNodeMask,
+    IUnknown* const*  ppPresentQueue
+) {
+    CleanupRenderTarget();
+    const auto result = oResizeBuffers1(pSwapChain, BufferCount, Width, Height, NewFormat, SwapChainFlags, pCreationNodeMask, ppPresentQueue);
+    CreateRenderTarget();
+    return result;
+}
+
 using ExecuteCommandLists = void(*)(ID3D12CommandQueue* queue, UINT NumCommandLists, ID3D12CommandList *const *ppCommandLists);
-ExecuteCommandLists oExecuteCommandLists;
+ExecuteCommandLists oExecuteCommandLists{};
 
 static void hkExecuteCommandLists(ID3D12CommandQueue* queue, const UINT NumCommandLists, ID3D12CommandList *const *ppCommandLists) {
     if (!g_pd3dCommandQueue) {
@@ -190,7 +232,13 @@ static void hkExecuteCommandLists(ID3D12CommandQueue* queue, const UINT NumComma
 }
 
 void impl::d3d12::init() {
-    auto status = kiero::bind<&IDXGISwapChain3::Present>(&oPresent, &hkPresent);
+    auto status = kiero::bind<&IDXGISwapChain::Present>(&oPresent, &hkPresent);
+    assert(status == kiero::Status::Success);
+
+    status = kiero::bind<&IDXGISwapChain::ResizeBuffers>(&oResizeBuffers, &hkResizeBuffers);
+    assert(status == kiero::Status::Success);
+
+    status = kiero::bind<&IDXGISwapChain3::ResizeBuffers1>(&oResizeBuffers1, &hkResizeBuffers1);
     assert(status == kiero::Status::Success);
 
     status = kiero::bind<&ID3D12CommandQueue::ExecuteCommandLists>(&oExecuteCommandLists, hkExecuteCommandLists);
