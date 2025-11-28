@@ -84,21 +84,20 @@ kiero::Status kiero::init(RenderType renderType) {
     }
 
     if (renderType == RenderType::Auto) {
-        if (::GetModuleHandle(_T("d3d9.dll")) != nullptr) {
-            renderType = RenderType::D3D9;
-        } else if (::GetModuleHandle(_T("d3d10.dll")) != nullptr) {
-            renderType = RenderType::D3D10;
-        } else if (::GetModuleHandle(_T("d3d11.dll")) != nullptr) {
-            renderType = RenderType::D3D11;
-        } else if (::GetModuleHandle(_T("d3d12.dll")) != nullptr) {
-            renderType = RenderType::D3D12;
-        } else if (::GetModuleHandle(_T("opengl32.dll")) != nullptr) {
-            renderType = RenderType::OpenGL;
-        } else if (::GetModuleHandle(_T("vulkan-1.dll")) != nullptr) {
+        if (GetModuleHandle(_T("vulkan-1.dll")))
             renderType = RenderType::Vulkan;
-        } else {
+        else if (GetModuleHandle(_T("opengl32.dll")))
+            renderType = RenderType::OpenGL;
+        else if (GetModuleHandle(_T("d3d12.dll")))
+            renderType = RenderType::D3D12;
+        else if (GetModuleHandle(_T("d3d11.dll")))
+            renderType = RenderType::D3D11;
+        else if (GetModuleHandle(_T("d3d10.dll")))
+            renderType = RenderType::D3D10;
+        else if (GetModuleHandle(_T("d3d9.dll")))
+            renderType = RenderType::D3D9;
+        else
             return Status::NotSupportedError;
-        }
     }
 
     const auto status = [renderType] {
