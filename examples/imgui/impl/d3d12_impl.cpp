@@ -186,7 +186,7 @@ static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncIn
 }
 
 using ResizeBuffers = HRESULT(*)(IDXGISwapChain*, UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags);
-ResizeBuffers oResizeBuffers{};
+static ResizeBuffers oResizeBuffers{};
 
 HRESULT hkResizeBuffers(
     IDXGISwapChain*   pSwapChain,
@@ -203,7 +203,7 @@ HRESULT hkResizeBuffers(
 }
 
 using ResizeBuffers1 = HRESULT(*)(IDXGISwapChain3*, UINT, UINT, UINT, DXGI_FORMAT, UINT, const UINT*, IUnknown* const*);
-ResizeBuffers1 oResizeBuffers1{};
+static ResizeBuffers1 oResizeBuffers1{};
 
 HRESULT hkResizeBuffers1(
     IDXGISwapChain3*  pSwapChain,
@@ -222,7 +222,7 @@ HRESULT hkResizeBuffers1(
 }
 
 using ExecuteCommandLists = void(*)(ID3D12CommandQueue* queue, UINT NumCommandLists, ID3D12CommandList *const *ppCommandLists);
-ExecuteCommandLists oExecuteCommandLists{};
+static ExecuteCommandLists oExecuteCommandLists{};
 
 static void hkExecuteCommandLists(ID3D12CommandQueue* queue, const UINT NumCommandLists, ID3D12CommandList *const *ppCommandLists) {
     if (!g_pd3dCommandQueue) {

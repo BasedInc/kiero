@@ -11,7 +11,7 @@ static WNDPROC oWndProc = nullptr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-LRESULT CALLBACK hkWindowProc(
+static LRESULT CALLBACK hkWindowProc(
 	_In_ HWND   hwnd,
 	_In_ UINT   uMsg,
 	_In_ WPARAM wParam,
