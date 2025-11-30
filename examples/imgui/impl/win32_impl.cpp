@@ -24,8 +24,15 @@ static LRESULT CALLBACK hkWindowProc(
 	return CallWindowProcA(oWndProc, hwnd, uMsg, wParam, lParam);
 }
 
-void impl::win32::init(void* hwnd) {
+void impl::win32::init(void* hwnd, const bool openGL) {
 	g_Hwnd = static_cast<HWND>(hwnd);
+
+	if (openGL) {
+		ImGui_ImplWin32_InitForOpenGL(g_Hwnd);
+	} else {
+		ImGui_ImplWin32_Init(g_Hwnd);
+	}
+
 	oWndProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(g_Hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&hkWindowProc)));
 }
 
@@ -33,4 +40,5 @@ void impl::win32::shutdown() {
 	if (oWndProc) {
 		SetWindowLongPtr(g_Hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(oWndProc));
 	}
+	ImGui_ImplWin32_Shutdown();
 }

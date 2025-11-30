@@ -22,10 +22,8 @@ static BOOL WINAPI hk_wglSwapBuffers(const HDC hDc) {
         const HWND hwnd = WindowFromDC(hDc);
 
         ImGui::CreateContext();
-        ImGui_ImplWin32_InitForOpenGL(hwnd);
         ImGui_ImplOpenGL3_Init();
-
-		impl::win32::init(hwnd);
+		impl::win32::init(hwnd, true);
 
         init = true;
     }
@@ -53,7 +51,6 @@ void impl::opengl::shutdown() {
     }
     win32::shutdown();
     ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 }
 

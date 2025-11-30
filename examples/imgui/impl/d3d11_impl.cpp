@@ -32,9 +32,7 @@ static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncIn
 		device->GetImmediateContext(context.put());
 
 		ImGui::CreateContext();
-		ImGui_ImplWin32_Init(desc.OutputWindow);
 		ImGui_ImplDX11_Init(device.get(), context.get());
-
 		impl::win32::init(desc.OutputWindow);
 
 		init = true;
@@ -64,7 +62,6 @@ void impl::d3d11::shutdown() {
 	}
     win32::shutdown();
 	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 }
 

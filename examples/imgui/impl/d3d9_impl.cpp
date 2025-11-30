@@ -36,9 +36,7 @@ HRESULT __stdcall hkEndScene(LPDIRECT3DDEVICE9 pDevice) {
 		winrt::check_hresult(pDevice->GetCreationParameters(&params));
 
 		ImGui::CreateContext();
-		ImGui_ImplWin32_Init(params.hFocusWindow);
 		ImGui_ImplDX9_Init(pDevice);
-
 		impl::win32::init(params.hFocusWindow);
 
 		init = true;
@@ -70,7 +68,6 @@ void impl::d3d9::shutdown() {
 	}
     win32::shutdown();
 	ImGui_ImplDX9_Shutdown();
-	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 }
 

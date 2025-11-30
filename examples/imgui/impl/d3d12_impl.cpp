@@ -137,9 +137,7 @@ static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, const UINT SyncIn
         CreateRenderTarget();
 
         ImGui::CreateContext();
-        ImGui_ImplWin32_Init(g_Hwnd);
         ImGui_ImplDX12_Init(&init_info);
-
         impl::win32::init(g_Hwnd);
 
         init = true;
@@ -259,7 +257,6 @@ void impl::d3d12::shutdown() {
 
     win32::shutdown();
     ImGui_ImplDX12_Shutdown();
-    ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 }
 

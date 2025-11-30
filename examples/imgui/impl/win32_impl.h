@@ -2,6 +2,6 @@
 
 namespace impl::win32 {
 
-	void init(void* hwnd);
+	void init(void* hwnd, bool openGL = false);
 	void shutdown();
 }
