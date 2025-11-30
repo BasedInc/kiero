@@ -30,7 +30,6 @@ add_library(kiero_imgui_demo SHARED
     imgui/impl/d3d11_impl.cpp
     imgui/impl/d3d12_impl.cpp
     imgui/impl/opengl_impl.cpp
-    imgui/impl/shared.cpp
     imgui/impl/win32_impl.cpp
 )
 target_link_libraries(kiero_imgui_demo PRIVATE

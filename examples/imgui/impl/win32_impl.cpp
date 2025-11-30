@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 
+static HWND g_Hwnd = nullptr;
 static WNDPROC oWndProc = nullptr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -24,5 +25,12 @@ static LRESULT CALLBACK hkWindowProc(
 }
 
 void impl::win32::init(void* hwnd) {
-	oWndProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(static_cast<HWND>(hwnd), GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&hkWindowProc)));
+	g_Hwnd = static_cast<HWND>(hwnd);
+	oWndProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(g_Hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&hkWindowProc)));
+}
+
+void impl::win32::shutdown() {
+	if (oWndProc) {
+		SetWindowLongPtr(g_Hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(oWndProc));
+	}
 }

@@ -5,7 +5,6 @@
 #include <Windows.h>
 
 #include "win32_impl.h"
-#include "shared.h"
 
 #include <kiero.hpp>
 
@@ -45,11 +44,22 @@ static BOOL WINAPI hk_wglSwapBuffers(const HDC hDc) {
 }
 
 void impl::opengl::init() {
-    kiero::bind(336, reinterpret_cast<void**>(&owglSwapBuffers), &hk_wglSwapBuffers);
+    kiero::bind(336, reinterpret_cast<void**>(&owglSwapBuffers), reinterpret_cast<void*>(&hk_wglSwapBuffers));
+}
+
+void impl::opengl::shutdown() {
+    if (!ImGui::GetCurrentContext()) {
+        return;
+    }
+    win32::shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
 }
 
 #else
 
 void impl::opengl::init() {}
+void impl::opengl::shutdown() {}
 
 #endif // KIERO_INCLUDE_OPENGL

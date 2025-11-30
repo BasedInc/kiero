@@ -9,7 +9,6 @@
 #include <winrt/base.h>
 
 #include "win32_impl.h"
-#include "shared.h"
 
 #include <kiero.hpp>
 
@@ -245,8 +244,28 @@ void impl::d3d12::init() {
     assert(status == kiero::Status::Success);
 }
 
+void impl::d3d12::shutdown() {
+    if (!ImGui::GetCurrentContext()) {
+        return;
+    }
+
+    g_pSwapChain = nullptr;
+    g_pd3dDevice = nullptr;
+    g_pd3dCommandQueue = nullptr;
+    g_pd3dCommandList = nullptr;
+    g_pd3dRtvDescHeap = nullptr;
+    g_pd3dSrvDescHeap = nullptr;
+    g_frameContext.clear();
+
+    win32::shutdown();
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+}
+
 #else
 
 void impl::d3d12::init() {}
+void impl::d3d12::shutdown() {}
 
 #endif // KIERO_INCLUDE_D3D12

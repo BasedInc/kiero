@@ -8,7 +8,6 @@
 #include <winrt/base.h>
 
 #include "win32_impl.h"
-#include "shared.h"
 
 #include <kiero.hpp>
 
@@ -65,8 +64,19 @@ void impl::d3d9::init() {
 	assert(status == kiero::Status::Success);
 }
 
+void impl::d3d9::shutdown() {
+	if (!ImGui::GetCurrentContext()) {
+		return;
+	}
+    win32::shutdown();
+	ImGui_ImplDX9_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+}
+
 #else
 
 void impl::d3d9::init() {}
+void impl::d3d9::shutdown() {}
 
 #endif // KIERO_INCLUDE_D3D9
