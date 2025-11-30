@@ -23,7 +23,7 @@ target_include_directories(imgui PUBLIC
     ${imgui_SOURCE_DIR}/backends
 )
 
-add_library(kiero_imgui_d3dx SHARED
+add_library(kiero_imgui_demo SHARED
     imgui/main.cpp
     imgui/impl/d3d9_impl.cpp
     imgui/impl/d3d10_impl.cpp
@@ -33,7 +33,7 @@ add_library(kiero_imgui_d3dx SHARED
     imgui/impl/shared.cpp
     imgui/impl/win32_impl.cpp
 )
-target_link_libraries(kiero_imgui_d3dx PRIVATE
+target_link_libraries(kiero_imgui_demo PRIVATE
     kiero::kiero
     imgui
 
