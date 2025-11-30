@@ -167,8 +167,8 @@ kiero::Status kiero::detail::unbind(void* target) {
     return hook::unbind(target);
 }
 
-uintptr_t kiero::detail::getMethod(const GUID& guid, const size_t index) {
-    const auto it = g_vTables.find(winrt::guid{guid});
+uintptr_t kiero::detail::getMethod(const void* guid, const size_t index) {
+    const auto it = g_vTables.find(winrt::guid{*static_cast<const IID*>(guid)});
     if (it != g_vTables.end()) {
         return it->second[index];
     }

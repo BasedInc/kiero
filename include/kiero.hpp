@@ -56,13 +56,11 @@ namespace kiero {
     uintptr_t getMethod();
 }
 
-typedef struct _GUID GUID;
-
 namespace kiero::detail {
 
     Status bind(void* target, void** original, void* detour);
     Status unbind(void* target);
-    uintptr_t getMethod(const GUID& guid, size_t index);
+    uintptr_t getMethod(const void* guid, size_t index);
 }
 
 namespace kiero {
@@ -88,6 +86,6 @@ namespace kiero {
     template<auto T>
     uintptr_t getMethod() {
         using base_type = typename detail::memfn_ptr_traits<decltype(T)>::base_type;
-        return detail::getMethod(__uuidof(base_type), detail::magic_vft::vtable_index<T>());
+        return detail::getMethod(&__uuidof(base_type), detail::magic_vft::vtable_index<T>());
     }
 }
