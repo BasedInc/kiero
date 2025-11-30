@@ -39,10 +39,16 @@ static DWORD WINAPI kieroExampleThread(LPVOID) {
     return TRUE;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpReserved) {
+BOOL WINAPI DllMain(const HINSTANCE hInstance, const DWORD fdwReason, [[maybe_unused]] LPVOID lpReserved) {
     if (fdwReason == DLL_PROCESS_ATTACH) {
+#ifdef _DLL
         DisableThreadLibraryCalls(hInstance);
-        CreateThread(nullptr, 0, &kieroExampleThread, nullptr, 0, nullptr);
+#endif
+        const auto thread = CreateThread(nullptr, 0, &kieroExampleThread, nullptr, 0, nullptr);
+        if (!thread) {
+            return FALSE;
+        }
+        CloseHandle(thread);
     }
     return TRUE;
 }
