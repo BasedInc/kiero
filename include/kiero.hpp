@@ -17,6 +17,8 @@ namespace kiero {
         NotImplementedError = -6,
         NoSuchInterfaceError = -7,
         MethodOutOfBoundsError = -8,
+        MethodAlreadyBoundError = -9,
+        MethodNotBoundError = -10,
 
         Success = 0,
     };
