@@ -68,7 +68,7 @@ static void(*initHooks())() {
 }
 
 static DWORD WINAPI kieroInitThread(const LPVOID hModule) {
-    if (kiero::init(kiero::RenderType::OpenGL) == kiero::Status::Success) {
+    if (kiero::init(kiero::RenderType::Auto) == kiero::Status::Success) {
         const auto shutdown = initHooks();
 
         isRunning = true;
