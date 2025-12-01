@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7...3.29)
+cmake_minimum_required(VERSION 3.12...3.29)
 
 option(KIERO_INCLUDE_D3D9 "Enable support for D3D9" OFF)
 option(KIERO_INCLUDE_D3D10 "Enable support for D3D10" OFF)
@@ -23,11 +23,6 @@ add_library(kiero STATIC
 add_library(kiero::kiero ALIAS kiero)
 target_compile_definitions(kiero PUBLIC KIERO_VERSION=${PROJECT_VERSION})
 target_compile_features(kiero PUBLIC cxx_std_20)
-
-set_target_properties(kiero PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-)
 
 if (MSVC)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
