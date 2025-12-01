@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include <kiero/vulkan.hpp>
+
 namespace kiero {
 
     template<>
@@ -9,7 +11,7 @@ namespace kiero {
         static constexpr std::array methodsNames{
             "vkCreateInstance", "vkDestroyInstance", "vkEnumeratePhysicalDevices", "vkGetPhysicalDeviceFeatures", "vkGetPhysicalDeviceFormatProperties", "vkGetPhysicalDeviceImageFormatProperties",
             "vkGetPhysicalDeviceProperties", "vkGetPhysicalDeviceQueueFamilyProperties", "vkGetPhysicalDeviceMemoryProperties", "vkGetInstanceProcAddr", "vkGetDeviceProcAddr", "vkCreateDevice",
-            "vkDestroyDevice", "vkEnumerateInstanceExtensionProperties", "vkEnumerateDeviceExtensionProperties", "vkEnumerateDeviceLayerProperties", "vkGetDeviceQueue", "vkQueueSubmit", "vkQueueWaitIdle",
+            "vkDestroyDevice", "vkEnumerateInstanceExtensionProperties", "vkEnumerateDeviceExtensionProperties", "vkEnumerateInstanceLayerProperties", "vkEnumerateDeviceLayerProperties", "vkGetDeviceQueue", "vkQueueSubmit", "vkQueueWaitIdle",
             "vkDeviceWaitIdle", "vkAllocateMemory", "vkFreeMemory", "vkMapMemory", "vkUnmapMemory", "vkFlushMappedMemoryRanges", "vkInvalidateMappedMemoryRanges", "vkGetDeviceMemoryCommitment",
             "vkBindBufferMemory", "vkBindImageMemory", "vkGetBufferMemoryRequirements", "vkGetImageMemoryRequirements", "vkGetImageSparseMemoryRequirements", "vkGetPhysicalDeviceSparseImageFormatProperties",
             "vkQueueBindSparse", "vkCreateFence", "vkDestroyFence", "vkResetFences", "vkGetFenceStatus", "vkWaitForFences", "vkCreateSemaphore", "vkDestroySemaphore", "vkCreateEvent", "vkDestroyEvent",
@@ -32,10 +34,11 @@ namespace kiero {
             return Status::ModuleNotFoundError;
         }
 
-        g_methodsTable.resize(methodsNames.size());
-        for (size_t i = 0; i < methodsNames.size(); i++) {
-            g_methodsTable[i] = reinterpret_cast<uintptr_t>(GetProcAddress(libVulkan, methodsNames[i]));
+        std::array<uintptr_t, methodsNames.size()> table{};
+        for (size_t i = 0; i < table.size(); i++) {
+            table[i] = reinterpret_cast<uintptr_t>(GetProcAddress(libVulkan, methodsNames[i]));
         }
+        init_table<VK>(table);
 
         return Status::Success;
     }

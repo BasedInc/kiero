@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include <kiero/opengl.hpp>
+
 namespace kiero {
 
     template<>
@@ -43,10 +45,11 @@ namespace kiero {
             return Status::ModuleNotFoundError;
         }
 
-        g_methodsTable.resize(methodsNames.size());
-        for (size_t i = 0; i < methodsNames.size(); i++) {
-            g_methodsTable[i] = reinterpret_cast<uintptr_t>(GetProcAddress(libOpenGL32, methodsNames[i]));
+        std::array<uintptr_t, methodsNames.size()> table{};
+        for (size_t i = 0; i < table.size(); i++) {
+            table[i] = reinterpret_cast<uintptr_t>(GetProcAddress(libOpenGL32, methodsNames[i]));
         }
+        init_table<GL>(table);
 
         return Status::Success;
     }

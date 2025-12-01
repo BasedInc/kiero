@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <span>
 
@@ -16,9 +17,8 @@ namespace kiero {
         NotInitializedError = -5,
         NotImplementedError = -6,
         NoSuchInterfaceError = -7,
-        MethodOutOfBoundsError = -8,
-        MethodAlreadyBoundError = -9,
-        MethodNotBoundError = -10,
+        MethodAlreadyBoundError = -8,
+        MethodNotBoundError = -9,
 
         Success = 0,
     };
@@ -40,17 +40,13 @@ namespace kiero {
     Status init(RenderType renderType);
     void shutdown();
 
-    Status bind(uint16_t index, void** original, void* detour);
-    Status unbind(uint16_t index);
-
-    template<auto T, typename Detour = typename detail::memfn_ptr_traits<decltype(T)>::detour_type>
+    template<auto T, typename Detour = typename detail::member_pointer_traits<decltype(T)>::detour_type>
     Status bind(std::type_identity_t<Detour**> original, std::type_identity_t<Detour*> detour);
 
     template<auto T>
     Status unbind();
 
     RenderType getRenderType();
-    std::span<const uintptr_t> getMethodsTable();
 
     template<auto T>
     uintptr_t getMethod();
@@ -61,6 +57,12 @@ namespace kiero::detail {
     Status bind(void* target, void** original, void* detour);
     Status unbind(void* target);
     uintptr_t getMethod(const void* guid, size_t index);
+    void* getMethodTable();
+
+    template<RenderType type>
+    struct MethodTable {
+        static constexpr auto render_type = type;
+    };
 }
 
 namespace kiero {
@@ -85,7 +87,22 @@ namespace kiero {
 
     template<auto T>
     uintptr_t getMethod() {
-        using base_type = typename detail::memfn_ptr_traits<decltype(T)>::base_type;
-        return detail::getMethod(&__uuidof(base_type), detail::magic_vft::vtable_index<T>());
+        using base_type = typename detail::member_pointer_traits<decltype(T)>::base_type;
+
+        if constexpr (std::is_member_function_pointer_v<decltype(T)>) {
+            return detail::getMethod(&__uuidof(base_type), detail::magic_vft::vtable_index<T>());
+        } else if constexpr (std::is_member_pointer_v<decltype(T)>) {
+            if (getRenderType() != base_type::render_type) {
+                return 0;
+            }
+            auto* table = static_cast<base_type*>(detail::getMethodTable());
+            if (!table) {
+                return 0;
+            }
+            return std::bit_cast<uintptr_t>(table->*T);
+        } else {
+            static_assert(sizeof(T) == 0, "Invalid method type");
+            return 0;
+        }
     }
 }

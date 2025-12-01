@@ -23,8 +23,11 @@ namespace kiero {
 }
 
 namespace {
+    using deleter_t = void(*)(void*);
+    void empty_deleter(void*) {}
+
     kiero::RenderType g_renderType = kiero::RenderType::None;
-    std::vector<uintptr_t> g_methodsTable;
+    std::unique_ptr<void, deleter_t> g_methodTable{nullptr, &empty_deleter};
     std::map<winrt::guid, uintptr_t*> g_vTables;
 
     template<typename T> requires std::is_polymorphic_v<T>
@@ -40,6 +43,16 @@ namespace {
                 g_vTables.emplace(winrt::guid_of<Impl>(), vtable_for(*impl));
             }
         }(), ...);
+    }
+
+    template<typename Table, size_t N>
+    void init_table(const std::array<uintptr_t, N> functions) {
+        g_methodTable = std::unique_ptr<Table, deleter_t>{
+            new Table(std::bit_cast<Table>(functions)),
+            +[](void* ptr) {
+                delete static_cast<Table*>(ptr);
+            }
+        };
     }
 }
 
@@ -127,24 +140,9 @@ void kiero::shutdown() {
         return;
     }
     hook::shutdown();
-    g_methodsTable.clear();
+    g_methodTable.reset();
     g_vTables.clear();
     g_renderType = RenderType::None;
-}
-
-kiero::Status kiero::bind(const uint16_t index, void** original, void* function) {
-    if (index >= g_methodsTable.size()) {
-        return Status::MethodOutOfBoundsError;
-    }
-    return detail::bind(reinterpret_cast<void*>(g_methodsTable[index]), original, function);
-}
-
-kiero::Status kiero::unbind([[maybe_unused]] const uint16_t index) {
-    if (index >= g_methodsTable.size()) {
-        return Status::MethodOutOfBoundsError;
-    }
-    detail::unbind(reinterpret_cast<void*>(g_methodsTable[index]));
-    return Status::Success;
 }
 
 kiero::Status kiero::detail::bind(void* target, void** original, void* detour) {
@@ -175,10 +173,10 @@ uintptr_t kiero::detail::getMethod(const void* guid, const size_t index) {
     return 0;
 }
 
-kiero::RenderType kiero::getRenderType() {
-    return g_renderType;
+void* kiero::detail::getMethodTable() {
+    return g_methodTable.get();
 }
 
-std::span<const uintptr_t> kiero::getMethodsTable() {
-    return g_methodsTable;
+kiero::RenderType kiero::getRenderType() {
+    return g_renderType;
 }

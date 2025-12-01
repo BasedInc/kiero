@@ -63,10 +63,14 @@ if (KIERO_INCLUDE_D3D12)
 endif()
 
 if (KIERO_INCLUDE_OPENGL)
+    find_package(OpenGL REQUIRED)
+    target_link_libraries(kiero PUBLIC OpenGL::GL)
     target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_OPENGL)
 endif()
 
 if (KIERO_INCLUDE_VULKAN)
+    find_package(Vulkan REQUIRED)
+    target_link_libraries(kiero PUBLIC Vulkan::Headers)
     target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_VULKAN)
 endif()
 

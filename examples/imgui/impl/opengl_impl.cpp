@@ -7,6 +7,7 @@
 #include "win32_impl.h"
 
 #include <kiero.hpp>
+#include <kiero/opengl.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_win32.h>
@@ -42,7 +43,7 @@ static BOOL WINAPI hk_wglSwapBuffers(const HDC hDc) {
 }
 
 void impl::opengl::init() {
-    kiero::bind(336, reinterpret_cast<void**>(&owglSwapBuffers), reinterpret_cast<void*>(&hk_wglSwapBuffers));
+    kiero::bind<&kiero::GL::wglSwapBuffers>(&owglSwapBuffers, &hk_wglSwapBuffers);
 }
 
 void impl::opengl::shutdown() {
