@@ -1,8 +1,8 @@
 #pragma once
 
-#include <kiero.hpp>
-
 #include <vulkan/vulkan_core.h>
+
+#include <kiero.hpp>
 
 namespace kiero {
 
