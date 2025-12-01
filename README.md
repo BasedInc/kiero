@@ -7,112 +7,70 @@
     <img src="https://img.shields.io/github/stars/Rebzzel/kiero.svg?style=flat-square"/>
   </a>
   <br>
-  Universal graphical hook for a D3D9-D3D12, OpenGL and Vulkan based games
+  Universal graphical hook for Direct3D, OpenGL, and Vulkan based games
 </p>
 
 ### Requirement
-[Windows SDK](https://www.microsoft.com/en-us/download/details.aspx?id=8279) (For D3D9/D3D10/D3D11/OpenGL hook)
+[Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/) (Direct3D/OpenGL)
 
-[DirectX SDK](https://www.microsoft.com/en-us/download/details.aspx?id=4064) (For D3D9/D3D10/D3D11 hook)
+[Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 
-[Vulkan SDK](https://www.lunarg.com/vulkan-sdk) (For Vulkan hook)
-
-[MinHook](https://github.com/TsudaKageyu/minhook) (For kiero::bind function)
-
-### Example
-To start, go to the kiero.h and select the desired hooks
-```C++
-// Example for D3D9 hook
-#define KIERO_INCLUDE_D3D9   1 // 1 if you need D3D9 hook
-#define KIERO_INCLUDE_D3D10  0 // 1 if you need D3D10 hook
-#define KIERO_INCLUDE_D3D11  0 // 1 if you need D3D11 hook
-#define KIERO_INCLUDE_D3D12  0 // 1 if you need D3D12 hook
-#define KIERO_INCLUDE_OPENGL 0 // 1 if you need OpenGL hook
-#define KIERO_INCLUDE_VULKAN 0 // 1 if you need Vulkan hook
-```
-
-Then proceed to the main work
+### Usage
 ```C++
 // Example for D3D9 hook
 
 // Include required libraries
-#include "kiero.h"
 #include <d3d9.h>
 #include <Windows.h>
 
+#include <kiero.hpp>
+
 // Create the type of function that we will hook
-typedef long(__stdcall* EndScene)(LPDIRECT3DDEVICE9);
-static EndScene oEndScene = NULL;
+using pfnEndScene = HRESULT(__stdcall*)(LPDIRECT3DDEVICE9);
+static pfnEndScene oEndScene = nullptr;
 
 // Declare the detour function
-long __stdcall hkEndScene(LPDIRECT3DDEVICE9 pDevice)
-{
-  // ... Your magic here ...
-  
-  // static bool init = false;
-  // if (!init)
-  // {
-  //  MessageBox(0, "Boom! It's works!", "Kiero", MB_OK);
-  //  init = true;
-  // }
-  
-  return oEndScene(pDevice);
+static HRESULT __stdcall hk_EndScene(LPDIRECT3DDEVICE9 pDevice) {
+    // static bool init = false;
+    // if (!init) {
+    //     MessageBox(0, "Hello, World!", "Kiero", MB_OK);
+    //     init = true;
+    // }
+    return oEndScene(pDevice);
 }
 
-int kieroExampleThread()
-{
-  if (kiero::init(kiero::RenderType::D3D9) == kiero::Status::Success)
-  // or
-  if (kiero::init(kiero::RenderType::Auto) == kiero::Status::Success)
-  {
-    // define KIERO_USE_MINHOOK must be 1
-    // the index of the required function can be found in the METHODSTABLE.txt
-    kiero::bind(42, (void**)&oEndScene, hkEndScene);
-    
-    // If you just need to get the function address you can use the kiero::getMethodsTable function
-    oEndScene = (EndScene)kiero::getMethodsTable()[42];
-  }
+static DWORD WINAPI kieroExampleThread(LPVOID) {
+    // Explicitly initialize for D3D9, "RenderType::Auto" can also be used
+    if (kiero::init(kiero::RenderType::D3D9) != kiero::Status::Success) {
+        return S_FALSE;
+    }
 
-  return 0;
+    // Using kiero::bind to hook EndScene
+    kiero::Status status = kiero::bind<&IDirect3DDevice9::EndScene>(&oEndScene, &hk_EndScene);
+
+    if (status == kiero::Status::Success) {
+        std::println("Successfully hooked IDirect3DDevice9::EndScene");
+    }
+
+    // Alternatively, get the address of the function via kiero::getMethod.
+    // By default, the return type is the same as the expected detour function type
+    pfnEndScene endScene = kiero::getMethod<&IDirect3DDevice9::EndScene>();
+
+    // A template parameter can be used to specify the return type to anything
+    // which can be bit_cast-ed from a uintptr_t
+    uintptr_t endScene = kiero::getMethod<&IDirect3DDevice9::EndScene, uintptr_t>();
+
+    return S_OK;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID)
-{
-  DisableThreadLibraryCalls(hInstance);
-
-  switch (fdwReason)
-  {
-    case DLL_PROCESS_ATTACH:
-      CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)kieroExampleThread, NULL, 0, NULL);
-      break;
-  }
-
-  return TRUE;
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpReserved) {
+    if (fdwReason == DLL_PROCESS_ATTACH) {
+        auto handle = CreateThread(nullptr, 0, &kieroExampleThread, nullptr, 0, nullptr);
+        if (!handle) {
+            return FALSE;
+        }
+        CloseHandle(handle);
+    }
+    return TRUE;
 }
-
-```
-
-### License
-```
-MIT License
-
-Copyright (c) 2014-2021 Rebzzel
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 ```
