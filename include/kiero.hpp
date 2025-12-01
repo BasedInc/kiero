@@ -41,15 +41,15 @@ namespace kiero {
     void shutdown();
 
     template<auto T, typename Detour = typename detail::member_pointer_traits<decltype(T)>::detour_type>
-    Status bind(std::type_identity_t<Detour**> original, std::type_identity_t<Detour*> detour);
+    Status bind(std::type_identity_t<Detour*> original, std::type_identity_t<Detour> detour);
 
     template<auto T>
     Status unbind();
 
     RenderType getRenderType();
 
-    template<auto T>
-    uintptr_t getMethod();
+    template<auto T, typename Method = typename detail::member_pointer_traits<decltype(T)>::detour_type>
+    Method getMethod();
 }
 
 namespace kiero::detail {
@@ -68,29 +68,30 @@ namespace kiero::detail {
 namespace kiero {
 
     template<auto T, typename Detour>
-    Status bind(std::type_identity_t<Detour**> original, std::type_identity_t<Detour*> detour) {
-        const auto method = getMethod<T>();
+    Status bind(std::type_identity_t<Detour*> original, std::type_identity_t<Detour> detour) {
+        const auto method = getMethod<T, void*>();
         if (!method) {
             return Status::NoSuchInterfaceError;
         }
-        return detail::bind(reinterpret_cast<void*>(method), reinterpret_cast<void**>(original), reinterpret_cast<void*>(detour));
+        return detail::bind(method, reinterpret_cast<void**>(original), reinterpret_cast<void*>(detour));
     }
 
     template<auto T>
     Status unbind() {
-        const auto method = getMethod<T>();
+        const auto method = getMethod<T, void*>();
         if (!method) {
             return Status::NoSuchInterfaceError;
         }
-        return detail::unbind(reinterpret_cast<void*>(method));
+        return detail::unbind(method);
     }
 
-    template<auto T>
-    uintptr_t getMethod() {
+    template<auto T, typename Method>
+    Method getMethod() {
         using base_type = typename detail::member_pointer_traits<decltype(T)>::base_type;
 
         if constexpr (std::is_member_function_pointer_v<decltype(T)>) {
-            return detail::getMethod(&__uuidof(base_type), detail::magic_vft::vtable_index<T>());
+            const auto address = detail::getMethod(&__uuidof(base_type), detail::magic_vft::vtable_index<T>());
+            return std::bit_cast<Method>(address);
         } else if constexpr (std::is_member_pointer_v<decltype(T)>) {
             if (getRenderType() != base_type::render_type) {
                 return 0;
@@ -99,7 +100,7 @@ namespace kiero {
             if (!table) {
                 return 0;
             }
-            return std::bit_cast<uintptr_t>(table->*T);
+            return std::bit_cast<Method>(table->*T);
         } else {
             static_assert(sizeof(T) == 0, "Invalid method type");
             return 0;
