@@ -1,9 +1,5 @@
 #include <kiero.hpp>
 
-#ifndef KIERO_USE_MINHOOK
-# error "The example requires that minhook be enabled!"
-#endif
-
 #include <Windows.h>
 
 #include <chrono>

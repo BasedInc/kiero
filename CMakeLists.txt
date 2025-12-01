@@ -6,8 +6,13 @@ option(KIERO_INCLUDE_D3D11 "Enable support for D3D11" OFF)
 option(KIERO_INCLUDE_D3D12 "Enable support for D3D12" OFF)
 option(KIERO_INCLUDE_OPENGL "Enable support for OpenGL" OFF)
 option(KIERO_INCLUDE_VULKAN "Enable support for Vulkan" OFF)
-option(KIERO_USE_MINHOOK "Enables \"kiero::bind\" as a wrapper around MinHook" OFF)
+
+option(KIERO_BUILD_MINHOOK "Builds the MinHook implementation for \"kiero::bind\"" OFF)
 option(KIERO_MINHOOK_EXTERNAL "Use an externally provided MinHook instead of the bundled" OFF)
+
+option(KIERO_BUILD_SAFETYHOOK "Builds the SafetyHook implementation for \"kiero::bind\"" OFF)
+option(KIERO_SAFETYHOOK_EXTERNAL "Use an externally provided SafetyHook instead of the bundled" OFF)
+
 option(KIERO_BUILD_EXAMPLES "Build example targets" ${PROJECT_IS_TOP_LEVEL})
 
 project(kiero VERSION 1.2.12)
@@ -74,7 +79,7 @@ if (KIERO_INCLUDE_VULKAN)
     target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_VULKAN)
 endif()
 
-if (KIERO_USE_MINHOOK)
+if (KIERO_BUILD_MINHOOK)
     if (NOT KIERO_MINHOOK_EXTERNAL)
         include(FetchContent)
         FetchContent_Declare(
@@ -86,9 +91,32 @@ if (KIERO_USE_MINHOOK)
     elseif (NOT TARGET minhook)
         message(FATAL_ERROR "minhook target not present")
     endif()
-    target_link_libraries(kiero PRIVATE minhook)
-    target_compile_definitions(kiero PUBLIC KIERO_USE_MINHOOK)
-    target_sources(kiero PRIVATE src/kiero_minhook.cpp)
+    add_library(kiero-minhook src/hook/kiero_minhook.cpp)
+    target_link_libraries(kiero-minhook
+        PUBLIC kiero::kiero
+        PRIVATE minhook
+    )
+    add_library(kiero::kiero-minhook ALIAS kiero-minhook)
+endif()
+
+if (KIERO_BUILD_SAFETYHOOK)
+    if (NOT KIERO_SAFETYHOOK_EXTERNAL)
+        include(FetchContent)
+        FetchContent_Declare(
+            safetyhook
+            GIT_REPOSITORY https://github.com/cursey/safetyhook.git
+            GIT_TAG        c3f3f306a0f12d1811c0b713ad2ed2a8ddc6cf55 # v0.6.9
+        )
+        FetchContent_MakeAvailable(safetyhook)
+    elseif (NOT TARGET safetyhook)
+        message(FATAL_ERROR "safetyhook target not present")
+    endif()
+    add_library(kiero-safetyhook src/hook/kiero_safetyhook.cpp)
+    target_link_libraries(kiero-safetyhook
+        PUBLIC kiero::kiero
+        PRIVATE safetyhook
+    )
+    add_library(kiero::kiero-safetyhook ALIAS kiero-safetyhook)
 endif()
 
 target_include_directories(kiero PUBLIC

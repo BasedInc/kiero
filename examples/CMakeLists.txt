@@ -33,7 +33,7 @@ add_library(kiero_imgui_demo SHARED
     imgui/impl/win32_impl.cpp
 )
 target_link_libraries(kiero_imgui_demo PRIVATE
-    kiero::kiero
+    kiero::kiero-minhook
     imgui
 
     RuntimeObject.lib
