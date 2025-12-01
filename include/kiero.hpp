@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <span>
 
-#include <kiero/magic_vtable.hpp>
-#include <kiero/type_traits.hpp>
+#include <kiero/detail/magic_vtable.hpp>
+#include <kiero/detail/type_traits.hpp>
 
 namespace kiero {
 
