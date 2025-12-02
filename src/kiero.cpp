@@ -129,7 +129,9 @@ kiero::Status kiero::init(RenderType renderType) {
     }();
 
     if (status == Status::Success) {
-        hook::init();
+        if (const auto s = hook::init(); s != Status::Success) {
+            return s;
+        }
         g_renderType = renderType;
     }
     return status;

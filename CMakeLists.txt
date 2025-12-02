@@ -17,16 +17,16 @@ option(KIERO_BUILD_EXAMPLES "Build example targets" ${PROJECT_IS_TOP_LEVEL})
 
 project(kiero VERSION 1.2.12)
 
-add_library(kiero STATIC
+add_library(kiero-core STATIC
     src/kiero.cpp
 )
-add_library(kiero::kiero ALIAS kiero)
-target_compile_definitions(kiero PUBLIC KIERO_VERSION=${PROJECT_VERSION})
-target_compile_features(kiero PUBLIC cxx_std_20)
+add_library(kiero::kiero-core ALIAS kiero-core)
+target_compile_definitions(kiero-core PUBLIC KIERO_VERSION=${PROJECT_VERSION})
+target_compile_features(kiero-core PUBLIC cxx_std_20)
 
 if (MSVC)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(kiero PRIVATE
+        target_compile_options(kiero-core PRIVATE
             /clang:-Wall
             /clang:-Wextra
             /clang:-Wcast-align
@@ -36,7 +36,7 @@ if (MSVC)
             /clang:-Wimplicit-fallthrough
         )
     else()
-        target_compile_options(kiero PRIVATE /WX /W4)
+        target_compile_options(kiero-core PRIVATE /WX /W4)
     endif()
 else()
     message(WARNING "Non Microsoft compatible compiler detected")
@@ -47,32 +47,36 @@ if (NOT (KIERO_INCLUDE_D3D9 OR KIERO_INCLUDE_D3D10 OR KIERO_INCLUDE_D3D11 OR KIE
 endif()
 
 if (KIERO_INCLUDE_D3D9)
-    target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_D3D9)
+    target_compile_definitions(kiero-core PUBLIC KIERO_INCLUDE_D3D9)
 endif()
 
 if (KIERO_INCLUDE_D3D10)
-    target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_D3D10)
+    target_compile_definitions(kiero-core PUBLIC KIERO_INCLUDE_D3D10)
 endif()
 
 if (KIERO_INCLUDE_D3D11)
-    target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_D3D11)
+    target_compile_definitions(kiero-core PUBLIC KIERO_INCLUDE_D3D11)
 endif()
 
 if (KIERO_INCLUDE_D3D12)
-    target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_D3D12)
+    target_compile_definitions(kiero-core PUBLIC KIERO_INCLUDE_D3D12)
 endif()
 
 if (KIERO_INCLUDE_OPENGL)
     find_package(OpenGL REQUIRED)
-    target_link_libraries(kiero PUBLIC OpenGL::GL)
-    target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_OPENGL)
+    target_link_libraries(kiero-core PUBLIC OpenGL::GL)
+    target_compile_definitions(kiero-core PUBLIC KIERO_INCLUDE_OPENGL)
 endif()
 
 if (KIERO_INCLUDE_VULKAN)
     find_package(Vulkan REQUIRED)
-    target_link_libraries(kiero PUBLIC Vulkan::Headers)
-    target_compile_definitions(kiero PUBLIC KIERO_INCLUDE_VULKAN)
+    target_link_libraries(kiero-core PUBLIC Vulkan::Headers)
+    target_compile_definitions(kiero-core PUBLIC KIERO_INCLUDE_VULKAN)
 endif()
+
+add_library(kiero STATIC src/hook/kiero_nobind.cpp)
+target_link_libraries(kiero PUBLIC kiero::kiero-core)
+add_library(kiero::kiero ALIAS kiero)
 
 if (KIERO_BUILD_MINHOOK)
     if (NOT KIERO_MINHOOK_EXTERNAL)
@@ -86,9 +90,9 @@ if (KIERO_BUILD_MINHOOK)
     elseif (NOT TARGET minhook)
         message(FATAL_ERROR "minhook target not present")
     endif()
-    add_library(kiero-minhook src/hook/kiero_minhook.cpp)
+    add_library(kiero-minhook STATIC src/hook/kiero_minhook.cpp)
     target_link_libraries(kiero-minhook
-        PUBLIC kiero::kiero
+        PUBLIC kiero::kiero-core
         PRIVATE minhook
     )
     add_library(kiero::kiero-minhook ALIAS kiero-minhook)
@@ -106,15 +110,15 @@ if (KIERO_BUILD_SAFETYHOOK)
     elseif (NOT TARGET safetyhook)
         message(FATAL_ERROR "safetyhook target not present")
     endif()
-    add_library(kiero-safetyhook src/hook/kiero_safetyhook.cpp)
+    add_library(kiero-safetyhook STATIC src/hook/kiero_safetyhook.cpp)
     target_link_libraries(kiero-safetyhook
-        PUBLIC kiero::kiero
+        PUBLIC kiero::kiero-core
         PRIVATE safetyhook
     )
     add_library(kiero::kiero-safetyhook ALIAS kiero-safetyhook)
 endif()
 
-target_include_directories(kiero PUBLIC
+target_include_directories(kiero-core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include>
 )
